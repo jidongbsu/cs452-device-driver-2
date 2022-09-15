@@ -109,7 +109,7 @@ this is the interrupt handler. Every time the keyboard raises an interrupt, this
 
   - 0xfa. This is called the acknowledge code, or "ack" code. When the host sends a command to the keyboard, the keyboard may respond with an **ack** code, indicating the command is received by the keyboard.
 
-A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only need to handle these two protocol scan codes, as well as all ordinary scan codes.
+A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only needs to handle these two protocol scan codes, as well as all ordinary scan codes.
 
 ## Testing
 
