@@ -42,6 +42,11 @@ As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addre
 
 The starter code looks like this:
 
+```console
+[cs452@xyno cs452-device-driver-2]$ ls
+8042.png  lincoln.c  Makefile  README.md  README.template
+```
+
 You will be completing the lincoln.c file. You should not modify the lincoln.h file.
 
 The starter code already provides you with the code for a kernel module called lincoln. To install the module, run make and then sudo insmod lincoln.ko; to remove it, run sudo rmmod lincoln. Yes, in rmmod, whether or not you specify ko does not matter; but in insmod, you must have that ko.
