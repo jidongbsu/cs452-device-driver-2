@@ -25,9 +25,9 @@ This chapter explains what roles I/O devices play in a computer system, and how 
 
 ### The Intel 8042 Controller
 
-The provided virtual machine has an Intel 8042 controller, which allows a PS/2 keyboard and a PS/2 mouse to connect to the machine.
+The provided virtual machine has an (emulated) Intel 8042 controller, which allows a PS/2 keyboard and a PS/2 mouse to connect to the machine.
 
-**side note**: it is my own understanding that most laptops contain an Intel 8042 controller and the keyboard comes with the laptop is considered as a PS2 keyboard. Correct me if this is not the case on your laptop. However, no matter you are using a PS/2 keyboard or not, it should not affect you complete this assignment, because the provided virtual machine would always treat your keyboard as a PS/2 keyboard. Even if your real keyboard is not a PS/2 keyboard, the virtual machine will make it act like a PS/2 keyboard.
+**side note**: it is my own understanding that most laptops contain an Intel 8042 controller and the keyboard comes with the laptop is considered as a PS/2 keyboard. Correct me if this is not the case on your laptop. However, no matter you are using a PS/2 keyboard or not, it should not affect you complete this assignment, because the provided virtual machine would always treat your keyboard as a PS/2 keyboard. Even if your real keyboard is not a PS/2 keyboard, the virtual machine will make it act like a PS/2 keyboard.
 
 The following picture, downloaded from the [osdev.org](https://wiki.osdev.org/%228042%22_PS/2_Controller) website, shows the structure of an Intel 8042 controller.
 
