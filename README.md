@@ -57,7 +57,7 @@ The starter code creates a proc interface for users to communicate with the keyb
 
 ## Intercepting the Default Keyboard Interrupt Handler
 
-The starter code also hijacks the default keyboard driver, so that when an interrupt occurs, the default interrupt handler will not be called, rather, it is an interrupt handler that you are going to implement - *lincoln_irq_handler(*(), which will be called.
+The starter code also hijacks the default keyboard driver, so that when an interrupt occurs, the default interrupt handler will not be called, rather, it is an interrupt handler that you are going to implement - *lincoln_irq_handler*(), which will be called.
 
 # Specification
 
