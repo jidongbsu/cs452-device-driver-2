@@ -15,13 +15,26 @@ You MUST build against the kernel version (3.10.0-1160.el7.x86_64), which is the
 
 Operating Systems: Three Easy Pieces: [I/O Devices](https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf).
 
-This chapter explains what roles I/O devices play in a computer system, and how device drivers work in general. In particular, it describes how an operating system interacts with I/O devices, and how interrupts work and why interrupts can lower the CPU's overhead. The chapter also explains what an interrupt handler is - in this assignment, a part of your job is to implement an interrupt handler for a keyboard.
+This chapter explains what roles I/O devices play in a computer system, and how device drivers work in general. In particular, it describes how an operating system interacts with I/O devices, and how interrupts work and why interrupts can lower the CPU's overhead. The chapter also explains what an interrupt handler is - in this assignment, a part of your job is to implement an interrupt handler for a PS/2 keyboard, which is the default keyboard used in the provided virtual machine.
 
 ## Background
 
 ### The Linux Input Subsystem
 
+### Intel 8042 Controller
 
+The provided virtual machine has an Intel 8042 controller, which allows a PS/2 keyboard and a PS/2 mouse to connect to the machine.
+
+**side note**: it is my own understanding that most laptops contain an Intel 8042 controller and the keyboard comes with the laptop is considered a PS2 keyboard. Correct me if this is not the case on your laptop. However, no matter you are using a PS/2 keyboard or not, it should not affect you complete this assignment, because the provided virtual machine would always treat your keyboard as a PS/2 keyboard. Even if your real keyboard is not a PS/2 keyboard, the virtual machine will make it act like a PS/2 keyboard.
+
+The following picture, downloaded from the [osdev.org]{https://wiki.osdev.org/%228042%22_PS/2_Controller} website, shows the structure of an Intel 8042 controller.
+
+![alt text](8042.png "Intel 8042 Controller")
+
+As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addresses are 0x60 and 0x64. 0x60 is called the data port, a port that allows us to transfer data to and from the keyboard. 0x64 is called the status port, or status register, which has 8 bits. In particular:
+
+1. bit 0 of this status register indicates the output buffer status (0=empty, 1=full), when this bit is 1, it means there is something for us to read from the data port.
+2. bit 1 of this status register indicates the input buffer status (0=empty, 1=full), when this bit is 0, it means the input buffer has space, and writing data to the data port is therefore allowed.
 
 # The Starter Code
 
@@ -37,9 +50,9 @@ static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, 
 
 this is the interrupt handler. Every time the keyboard raises an interrupt, this function will get called. There are two situations when a keyboard raises an interrupts:
 
-1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just typed) to the upper layer of the system, and eventually the application will get receive that key. Here, the second parameter of the interrupt handler, which *data*, stores the scan code.
+1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just typed) to the upper layer of the system, and eventually the application will get receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
 
-2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code.
+2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code.
 
 ## Testing
 
