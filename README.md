@@ -11,6 +11,8 @@ In this assignment, we will write a Linux kernel module called lincoln. This mod
 
 You MUST build against the kernel version (3.10.0-1160.el7.x86_64), which is the default version of the kernel installed on the cs452 VM.
 
+In this README, you will see the term **host**. It is used to refer to the computer to which the keyboard is connected.
+
 ## Book References
 
 Operating Systems: Three Easy Pieces: [I/O Devices](https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf).
@@ -38,11 +40,43 @@ As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addre
 
 # The Starter Code
 
+The starter code already provides you with the code for a kernel module called lincoln. To install the module, run make and then sudo insmod lincoln.ko; to remove it, run sudo rmmod lincoln. Yes, in rmmod, whether or not you specify ko does not matter; but in insmod, you must have that ko.
 
+Read the [Proc Interface](#the proc interface) section for more information about the starter code.
 
 # Specification
 
 You are required to implement the following functions.
+
+```c
+static int lincoln_kbd_write(struct serio *port, unsigned char c);
+```
+
+this function sends a single byte to the keyboard. A PS/2 keyboard supports 17 host-to-keyboard commands. For example, command *0xf5* means disabling the keyboard, and command *0xf4* means enabling the keyboard, and command 0xff means resetting the keyboard. In this assignment, we want to allow the user to disable, enable and reset the keyboard. More specifically, when the user runs this:
+
+```console
+# sudo echo 'D' > /proc/lincoln/cmd
+```
+
+we need to disable the keyboard. In other words, we want to send the *0xf5* command to the keyboard - write this 0xf5 to the data port. The expected effect of this command is, the keyboard will become unresponsive.
+
+And then when the user runs this:
+
+```console
+# sudo echo 'E' > /proc/lincoln/cmd
+```
+
+we need to enable the keyboard. In other words, we want to send the *0xf4* command to the keyboard - write this 0xf4 to the data port. The expected effect of this command is, the keyboard will become responsive again.
+
+**Question**: when the keyboard is not responsive at all, how can the user even enter the second command - which enables the keyboard?
+
+And then when the user runs this:
+
+```console
+# sudo echo 'R' > /proc/lincoln/cmd
+```
+
+we want to keyboard to reset. In other words, we want to send the *0xff* command to the keyboard - write this 0xf4 to the data port. The expected effect of this command is, the keyboard will perform a BAT test and when the BAT test is complete, the keyboard will send either 0xAA (BAT successful) or 0xFC (Error) to the host. Keep reading this README and you will soon find out what BAT is.
 
 ```c
 static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, unsigned int flags);
@@ -50,31 +84,19 @@ static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, 
 
 this is the interrupt handler. Every time the keyboard raises an interrupt, this function will get called. There are two situations when a keyboard raises an interrupts:
 
-1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just typed) to the upper layer of the system, and eventually the application will get receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
+1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just pressed or released) to the upper layer of the system, and eventually the application will receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
 
-2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code.
+2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code. Some examples of the protocol scan code include:
 
-```c
-static int lincoln_kbd_write(struct serio *port, unsigned char c);
-```
+1. 0xaa. This is called the BAT successful code. When you boot your computer, the keyboard performs a diagnostic self-test referred to as BAT (Basic Assurance Test) and configure the keyboard to its default values. When entering BAT, the keyboard enables its three LED indicators, and turns them off when BAT has completed. At this time, a BAT completion code of either 0xAA (BAT successful) or 0xFC (Error) is sent to the host. Besides power-on, a software reset would also trigger the keyboard to perform BAT.
 
-this function sends a single byte to the keyboard. A PS/2 keyboard supports 17 host-to-keyboard commands. For example, command 0xf5 means disabling the keyboard, and command 0xf4 means enabling the keyboard. In this assignment, we want to allow user to disable and enable the keyboard. More specifically, when the user runs this:
+2. 0xfa. This is called the acknowledge code, or "ack" code. When the host sends a command to the keyboard, the keyboard may respond with an **ack** code, indicating the command is received by the keyboard.
 
-```console
-# sudo echo 'D' > /proc/lincoln/cmd
-```
+A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only need to handle these two protocol scan codes, as well as all ordinary scan codes.
 
-we need to disable the keyboard. In other words, we want to send the 0xf5 command to the keyboard - write this 0xf5 to the data port. The expected effect of this command is, the keyboard will become unresponsive.
+## The Proc Interface Provided by the Starter Code
 
-And then when the user runs this:
 
-```console
-sudo echo 'E' > /proc/lincoln/cmd
-```
-
-we need to enable the keyboard. In other words, we want to send the 0xf4 command to the keyboard - write this 0xf4 to the data port. The expected effect of this command is, the keyboard will become responsive again.
-
-**Question**: when the keyboard is not responsive at all, how can the user even enter the second command - which enables the keyboard?
 
 ## Testing
 
