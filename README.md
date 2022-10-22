@@ -113,6 +113,15 @@ A typical keyboard also defines other protocol scan codes. In this assignment, y
 
 ## Testing
 
+When the module is loaded, the user, in the starter code directory, types *sl* from a local console inside the virtual machine, should see *ls* and the result of the *ls* command:
+
+```console
+[cs452@xyno cs452-device-driver-2]$ ls
+8042.png  lincoln.c  Makefile  README.md  README.template
+```
+
+**Note**: here we see *ls*, but I actually typed *sl*.
+
 ## Submission
 
 Due: 23:59pm, November 20th, 2022. Late submission will not be accepted/graded.
