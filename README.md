@@ -19,7 +19,27 @@ This chapter explains what roles I/O devices play in a computer system, and how 
 
 ## Background
 
+### The Linux Input Subsystem
+
+
+
+# The Starter Code
+
+
+
 # Specification
+
+You are required to implement the following functions.
+
+```c
+static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, unsigned int flags);
+```
+
+this is the interrupt handler. Every time the keyboard raises an interrupt, this function will get called. There are two situations when a keyboard raises an interrupts:
+
+1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just typed) to the upper layer of the system, and eventually the application will get receive that key. Here, the second parameter of the interrupt handler, which *data*, stores the scan code.
+
+2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code.
 
 ## Testing
 
