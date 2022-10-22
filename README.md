@@ -111,6 +111,8 @@ this is the interrupt handler. Every time the keyboard raises an interrupt, this
 
 A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only needs to handle these two protocol scan codes, as well as all ordinary scan codes.
 
+**Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*.
+
 ## Testing
 
 ### Part 1.
