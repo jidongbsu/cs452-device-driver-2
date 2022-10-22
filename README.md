@@ -27,7 +27,7 @@ The provided virtual machine has an Intel 8042 controller, which allows a PS/2 k
 
 **side note**: it is my own understanding that most laptops contain an Intel 8042 controller and the keyboard comes with the laptop is considered a PS2 keyboard. Correct me if this is not the case on your laptop. However, no matter you are using a PS/2 keyboard or not, it should not affect you complete this assignment, because the provided virtual machine would always treat your keyboard as a PS/2 keyboard. Even if your real keyboard is not a PS/2 keyboard, the virtual machine will make it act like a PS/2 keyboard.
 
-The following picture, downloaded from the [osdev.org]{https://wiki.osdev.org/%228042%22_PS/2_Controller} website, shows the structure of an Intel 8042 controller.
+The following picture, downloaded from the [osdev.org](https://wiki.osdev.org/%228042%22_PS/2_Controller) website, shows the structure of an Intel 8042 controller.
 
 ![alt text](8042.png "Intel 8042 Controller")
 
