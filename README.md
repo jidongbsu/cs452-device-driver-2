@@ -21,11 +21,11 @@ This chapter explains what roles I/O devices play in a computer system, and how 
 
 ### The Linux Input Subsystem
 
-### Intel 8042 Controller
+### The Intel 8042 Controller
 
 The provided virtual machine has an Intel 8042 controller, which allows a PS/2 keyboard and a PS/2 mouse to connect to the machine.
 
-**side note**: it is my own understanding that most laptops contain an Intel 8042 controller and the keyboard comes with the laptop is considered a PS2 keyboard. Correct me if this is not the case on your laptop. However, no matter you are using a PS/2 keyboard or not, it should not affect you complete this assignment, because the provided virtual machine would always treat your keyboard as a PS/2 keyboard. Even if your real keyboard is not a PS/2 keyboard, the virtual machine will make it act like a PS/2 keyboard.
+**side note**: it is my own understanding that most laptops contain an Intel 8042 controller and the keyboard comes with the laptop is considered as a PS2 keyboard. Correct me if this is not the case on your laptop. However, no matter you are using a PS/2 keyboard or not, it should not affect you complete this assignment, because the provided virtual machine would always treat your keyboard as a PS/2 keyboard. Even if your real keyboard is not a PS/2 keyboard, the virtual machine will make it act like a PS/2 keyboard.
 
 The following picture, downloaded from the [osdev.org](https://wiki.osdev.org/%228042%22_PS/2_Controller) website, shows the structure of an Intel 8042 controller.
 
@@ -53,6 +53,28 @@ this is the interrupt handler. Every time the keyboard raises an interrupt, this
 1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just typed) to the upper layer of the system, and eventually the application will get receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
 
 2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code.
+
+```c
+static int lincoln_kbd_write(struct serio *port, unsigned char c);
+```
+
+this function sends a single byte to the keyboard. A PS/2 keyboard supports 17 host-to-keyboard commands. For example, command 0xf5 means disabling the keyboard, and command 0xf4 means enabling the keyboard. In this assignment, we want to allow user to disable and enable the keyboard. More specifically, when the user runs this:
+
+```console
+# sudo echo 'D' > /proc/lincoln/cmd
+```
+
+we need to disable the keyboard. In other words, we want to send the 0xf5 command to the keyboard - write this 0xf5 to the data port. The expected effect of this command is, the keyboard will become unresponsive.
+
+And then when the user runs this:
+
+```console
+sudo echo 'E' > /proc/lincoln/cmd
+```
+
+we need to enable the keyboard. In other words, we want to send the 0xf4 command to the keyboard - write this 0xf4 to the data port. The expected effect of this command is, the keyboard will become responsive again.
+
+**Question**: when the keyboard is not responsive at all, how can the user even enter the second command - which enables the keyboard?
 
 ## Testing
 
