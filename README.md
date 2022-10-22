@@ -40,9 +40,19 @@ As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addre
 
 # The Starter Code
 
+The starter code looks like this:
+
+You will be completing the lincoln.c file. You should not modify the lincoln.h file.
+
 The starter code already provides you with the code for a kernel module called lincoln. To install the module, run make and then sudo insmod lincoln.ko; to remove it, run sudo rmmod lincoln. Yes, in rmmod, whether or not you specify ko does not matter; but in insmod, you must have that ko.
 
-Read the [Proc Interface](#the-proc-interface) section for more information about the starter code.
+## The Proc Interface
+
+The starter code creates a proc interface for users to communicate with the keyboard. More specifically, when the module is loaded, a file called */proc/lincoln/cmd* will be created. Users can write commands into this file, and the commands are expected to pass to the keyboard, via a function you are going to implement - *lincoln_kbd_write*().
+
+## Intercepting the Default Keyboard Interrupt Handler
+
+The starter code also hijacks the default keyboard driver, so that when an interrupt occurs, the default interrupt handler will not be called, rather, it is an interrupt handler that you are going to implement - *lincoln_irq_handler(*(), which will be called.
 
 # Specification
 
@@ -93,10 +103,6 @@ this is the interrupt handler. Every time the keyboard raises an interrupt, this
 2. 0xfa. This is called the acknowledge code, or "ack" code. When the host sends a command to the keyboard, the keyboard may respond with an **ack** code, indicating the command is received by the keyboard.
 
 A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only need to handle these two protocol scan codes, as well as all ordinary scan codes.
-
-## The Proc Interface
-
-
 
 ## Testing
 
