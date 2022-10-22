@@ -143,9 +143,9 @@ Other keys should work as expected:
 cs452    pts/0        2022-09-15 10:25 (192.168.56.1)
 [cs452@xyno cs452-device-driver-2]$ whoami
 cs452
-[cs452@xyno cs452-device-driver-2]$ clear
-no output here, the terminal screen should be cleared...
 ```
+
+**Note**: we do not need to test special keys, such as ESC, Left SHIFT, Right SHIFT etc.
 
 ### Part 2.
 
@@ -193,7 +193,7 @@ Grade: /100
 
 - [ 80 pts] Functional Requirements:
   - *ls* shows (and runs) as *sl*, and *sl* shows (and runs) as *ls*. /20
-  - Commands *pwd*, *who*, *whoami*, and *clear* works as expected. /20
+  - Commands *pwd*, *who*, and *whoami* work as expected. /20
   - Keyboard disable and then enable works. /20
   - Keyboard reset works and we get that ack message in the kernel log. /10
   - Module can be installed and removed without crashing the system: /10
