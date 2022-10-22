@@ -42,7 +42,7 @@ As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addre
 
 The starter code already provides you with the code for a kernel module called lincoln. To install the module, run make and then sudo insmod lincoln.ko; to remove it, run sudo rmmod lincoln. Yes, in rmmod, whether or not you specify ko does not matter; but in insmod, you must have that ko.
 
-Read the [Proc Interface](#the proc interface) section for more information about the starter code.
+Read the [Proc Interface](#the-proc-interface) section for more information about the starter code.
 
 # Specification
 
@@ -94,7 +94,7 @@ this is the interrupt handler. Every time the keyboard raises an interrupt, this
 
 A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only need to handle these two protocol scan codes, as well as all ordinary scan codes.
 
-## The Proc Interface Provided by the Starter Code
+## The Proc Interface
 
 
 
