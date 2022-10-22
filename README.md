@@ -113,6 +113,8 @@ A typical keyboard also defines other protocol scan codes. In this assignment, y
 
 ## Testing
 
+### Part 1.
+
 When the module is loaded, the user, in the starter code directory, types *sl* from a local console inside the virtual machine, should see *ls* and the result of the *ls* command:
 
 ```console
@@ -121,6 +123,59 @@ When the module is loaded, the user, in the starter code directory, types *sl* f
 ```
 
 **Note**: here we see *ls*, but I actually typed *sl*.
+
+when the user actually types *ls*, the user should see *sl*, and get the following:
+
+```console
+[cs452@xyno cs452-device-driver-2]$ sl
+bash: sl: command not found...
+Similar command is: 'ls'
+```
+
+Other keys should work as expected:
+
+```console
+[cs452@xyno cs452-device-driver-2]$ pwd
+/home/cs452/cs452-device-driver-2
+[cs452@xyno cs452-device-driver-2]$ who
+cs452    pts/0        2022-09-15 10:25 (192.168.56.1)
+[cs452@xyno cs452-device-driver-2]$ whoami
+cs452
+[cs452@xyno cs452-device-driver-2]$ clear
+no output here, the terminal screen should be cleared...
+```
+
+### Part 2.
+
+When the user runs:
+
+```console
+# sudo echo 'D' > /proc/lincoln/cmd
+```
+
+The keyboard becomes unresponsive.
+
+When the user then runs:
+
+```console
+# sudo echo 'E' > /proc/lincoln/cmd
+```
+
+The keyboard becomes responsive again.
+
+When the user runs:
+
+```console
+# sudo echo 'R' > /proc/lincoln/cmd
+```
+
+We must see this message printed in the kernel log:
+
+```console
+we get an ACK from the keyboard.
+```
+
+And this message must be printed by your interrupt handler function.
 
 ## Submission
 
@@ -135,7 +190,12 @@ All files necessary for compilation and testing need to be submitted, this inclu
 Grade: /100
 
 - [ 80 pts] Functional Requirements:
-  - to be added here.
+  - *ls* shows (and runs) as *sl*, and *sl* shows (and runs) as *ls*. /20
+  - Commands *pwd*, *who*, *whoami*, and *clear* works as expected. /20
+  - Keyboard disable and then enable works. /20
+  - Keyboard reset works and we get that ack message in the kernel log. /10
+  - Module can be installed and removed without crashing the system: /10
+    - You won't get these points if your module doesn't implement any of the above functional requirements.
 
 - [10 pts] Compiler warnings:
   - Each compiler warning will result in a 3 point deduction.
