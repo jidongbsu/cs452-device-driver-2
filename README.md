@@ -23,7 +23,13 @@ This chapter explains what roles I/O devices play in a computer system, and how 
 
 ### The Linux Input Subsystem
 
+According to chapter 7 (Input Drivers) of the book "Essential Linux Device Drivers", written by Sreekrishnan Venkateswaran, the Linux kernel has an input subsystem which "was created to unify scattered drivers that handle diverse classes of data-input devices such as keyboards, mice, trackballs, joysticks, roller wheels, touch screens, accelerometers, and tablets." The input subsystem looks like this:
+
 ![alt text](linux-input.jpg "The Linux Input Subsystem")
+
+The chapter says the above figure "illustrates the operation of the input subsystem. The subsystem contains two classes of drivers that work in tandem: event drivers and device drivers. Event drivers are responsible for interfacing with applications, whereas device drivers are responsible for low-level communication with input devices. The mouse event generator, mousedev, is an example of the former, and the PS/2 mouse driver is an example of the latter. Both event drivers and device drivers can avail the services of an efficient, bug-free, reusable core, which lies at the heart of the input subsystem."
+
+You are recommended to read the chapter, but to briefly explain this figure and relate it to this assignment: the part we are working on is a keyboard device driver, which belongs to the **input device drivers**, and we will interact with the keyboard event driver, which is already existing in the Linux kernel and belongs to the **input event drivers**. An input device driver does not directly interact with applications, rather it interacts with an input event driver, and that input event driver interacts with applications. Therefore, when a key press/release event occurs, we, as the keyboard device driver, capture this event and report this event to the keyboard event driver. See the [Input Event APIs](#input_event_apis) section for the APIs we can use to report events.
 
 ### The Intel 8042 Controller
 
@@ -103,17 +109,19 @@ we want to keyboard to reset. In other words, we want to send the *0xff* command
 static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, unsigned int flags);
 ```
 
-this is the interrupt handler. Every time the keyboard raises an interrupt, this function will get called. There are two situations when a keyboard raises an interrupts:
+this is the interrupt handler. Every time the keyboard raises an interrupt, this function will get called. There are two **situations** when a keyboard raises an interrupts:
 
-1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just pressed or released) to the upper layer of the system, and eventually the application will receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
+**Situation** 1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just pressed or released) to the upper layer of the system, and eventually the application will receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
 
-2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code. Some examples of the protocol scan code include:
+**Situation** 2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code. Some examples of the protocol scan code include:
 
   - 0xaa. This is called the BAT successful code. When you boot your computer, the keyboard performs a diagnostic self-test referred to as BAT (Basic Assurance Test) and configure the keyboard to its default values. When entering BAT, the keyboard enables its three LED indicators, and turns them off when BAT has completed. At this time, a BAT completion code of either 0xAA (BAT successful) or 0xFC (Error) is sent to the host. Besides power-on, a software reset would also trigger the keyboard to perform BAT.
 
   - 0xfa. This is called the acknowledge code, or "ack" code. When the host sends a command to the keyboard, the keyboard may respond with an **ack** code, indicating the command is received by the keyboard.
 
 A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only needs to handle these two protocol scan codes, as well as all ordinary scan codes.
+
+As described above, our code is a part of a keyboard device driver. When a keyboard raises an interrupt, and if it is because of **situation** 1, i.e., user input, then our interrupt handler should pass this event to the keyboard event driver; when a keyboard raises an interrupt, but if it is because of **situation** 2, i.e., not an user input, our interrupt handler should react to it, but should not pass this event to the keyboard event driver. This is because the keyboard event driver's job is to collect events from the keyboard device driver and notify applications, when there is no user input, applications should not be notified by the keyboard event driver.
 
 **Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*.
 
@@ -142,6 +150,22 @@ inb(0x64)
 ```c
 outb(c, 0x60)
 ```
+
+## Input Event APIs
+
+In the interrupt handler function, to report events to the input event drivers layer, you can call *input_event*() and *input_sync*() like this:
+
+```c
+struct atkbd *atkbd = serio_get_drvdata(serio);	// here serio is the first parameter of the interrupt handler function.
+struct input_dev *dev = atkbd->dev;
+input_event(dev, EV_KEY, keycode, value); // this function generates the event
+input_sync(dev); // this function indicates that the input subsystem can collect previously generated events into an evdev packet and send it to user space via /dev/input/inputX
+```
+
+Here *keycode* refers to the code that is corresponding to the key that is pressed or released, and *value* refers to the action of press or release. If the action is a key press, then value must be 1, if the action is a key release, then value must be 0. We can derive both the keycode and the value from the second parameter (i.e., *data*) of the interrupt handler function. The parameter *data*, as an unsigned char data type, has 8 bits, and
+
+1. bit 7 represents the action: 0==release, 1==press
+2. bit 6 to bit 0 represents the keycode.
 
 ## Testing
 
