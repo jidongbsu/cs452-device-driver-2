@@ -40,21 +40,9 @@ MODULE_LICENSE("GPL v2");	/* without saying this, we won't be able to use kallsy
 
 #define ATKBD_KEYMAP_SIZE       512
 
-#define ATKBD_CMD_SETLEDS       0x10ed
-#define ATKBD_CMD_GSCANSET      0x11f0
-#define ATKBD_CMD_SSCANSET      0x10f0
-#define ATKBD_CMD_GETID         0x02f2
-#define ATKBD_CMD_SETREP        0x10f3
 #define ATKBD_CMD_ENABLE        0x00f4
 #define ATKBD_CMD_RESET_DIS     0x00f5  /* Reset to defaults and disable */
-#define ATKBD_CMD_RESET_DEF     0x00f6  /* Reset to defaults */
-#define ATKBD_CMD_SETALL_MB     0x00f8  /* Set all keys to give break codes */
-#define ATKBD_CMD_SETALL_MBR    0x00fa  /* ... and repeat */
-#define ATKBD_CMD_RESET_BAT     0x02ff
-#define ATKBD_CMD_RESEND        0x00fe
-#define ATKBD_CMD_EX_ENABLE     0x10ea
-#define ATKBD_CMD_EX_SETLEDS    0x20eb
-#define ATKBD_CMD_OK_GETID      0x02e8
+#define ATKBD_CMD_RESET_BAT     0x00ff
 
 /* protocol scancodes */
 /* ATKBD_RET_ACK means acknowledge from kbd. 
@@ -70,9 +58,6 @@ MODULE_LICENSE("GPL v2");	/* without saying this, we won't be able to use kallsy
 #define ATKBD_RET_HANJA         0xf1	/* Some keyboards, as reply to command */
 #define ATKBD_RET_HANGEUL       0xf2	/* */
 #define ATKBD_RET_ERR           0xff	/* Keyboard error */
-
-#define ATKBD_KEY_UNKNOWN       0
-#define ATKBD_KEY_NULL          255
 
 struct i8042_port {
         struct serio *serio;
@@ -131,7 +116,8 @@ static struct proc_dir_entry *pdir;
 #define FILE_NAME "cmd"
 
 /* we do not support EV_MSC events, thus we do not generate EV_MSC MSC_SCAN or EV_MSC MSC_RAW events.
- * this driver only supports number keys and letter keys. */
+ * this driver only supports number keys and letter keys; special keys require some special treatment, 
+ * which is beyond the scope of this program. */
 static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, unsigned int flags)
 {
 	return IRQ_HANDLED;
@@ -154,39 +140,31 @@ static int lincoln_kbd_write(struct serio *port, unsigned char c)
  * "D": disable;
  * "E": enable;
  * "R": reset;
- * "G": get the current scan code set;
  * */
 ssize_t write_proc(struct file *filp, const char *user, size_t count, loff_t *offset)
 {
 	char *buf = (char *)kmalloc(count, GFP_KERNEL);
-	char type;
-	struct atkbd *atkbd = NULL;
+	char cmd;
 
-	atkbd = serio_get_drvdata(i8042_ports[0].serio);
-
-   if(copy_from_user(buf, user, count)){
+	/* this is the command the user sends to us, copy it to a kernel buffer. */
+	if(copy_from_user(buf, user, count)){
 		return -EFAULT;
 	}
-   type = buf[0];
+   cmd = buf[0];
 
-   switch(type)
+   switch(cmd)
    {
       case 'D':
-	serio_write(i8042_ports[0].serio, ATKBD_CMD_RESET_DIS);
+		serio_write(i8042_ports[0].serio, ATKBD_CMD_RESET_DIS);
         break;
       case 'E':
-	serio_write(i8042_ports[0].serio, ATKBD_CMD_ENABLE);
+		serio_write(i8042_ports[0].serio, ATKBD_CMD_ENABLE);
         break;
       case 'R':
        	serio_write(i8042_ports[0].serio, ATKBD_CMD_RESET_BAT);
         break;
-      case 'G':
-		/* when command is 0xf0, and the argument byte is 0x00, 
-	 	 * the keyboard responds with "ack" followed by the current scan code set.*/
-       	serio_write(i8042_ports[0].serio, ATKBD_CMD_GSCANSET);
-		/* first we send the command itself, now we send the argument byte for this command. */
-       	serio_write(i8042_ports[0].serio, 0);
-        break;
+      default:
+		printk(KERN_INFO "command not supported.");
    }
 
    kfree((void *)buf);
@@ -209,6 +187,7 @@ void delete_proc_files(void) {
    remove_proc_entry(DIR_NAME, NULL);
 }
 
+/* this function gets called when the module is loaded. */
 static int __init lincoln_init(void){
 	struct platform_driver * i8042_driver;
 	struct device_driver * driver;
@@ -240,11 +219,15 @@ static int __init lincoln_init(void){
 			(unsigned long) I8042_DATA_REG,
 			(unsigned long) I8042_COMMAND_REG,
 			i8042_ports[0].irq);
+		/* redirect the write function to our write function. */
 		orig_kbd_write = i8042_ports[0].serio->write;
 		i8042_ports[0].serio->write = lincoln_kbd_write;
 
-		orig_irq_handler = i8042_ports[0].serio->drv->interrupt;
-		i8042_ports[0].serio->drv->interrupt = lincoln_irq_handler;
+		/* redirect the interrupt handler pointer to point to our interrupt handler. */
+		if(i8042_ports[0].serio->drv!=NULL){
+			orig_irq_handler = i8042_ports[0].serio->drv->interrupt;
+			i8042_ports[0].serio->drv->interrupt = lincoln_irq_handler;
+		}
 	}
 
 	/* next, let's print aux info, which is actually for the mouse. the mouse is associated with irq 12. */
@@ -256,15 +239,20 @@ static int __init lincoln_init(void){
 			i8042_ports[1].irq);
 	}
 
+	/* creating the /proc/lincoln/cmd file. */
 	create_proc_files();
 	return 0;
 }
 
+/* this function gets called when the module is unloaded. */
 static void __exit lincoln_exit(void){
-	if(i8042_ports[0].serio){
-		i8042_ports[0].serio->drv->interrupt = orig_irq_handler;
+	if(i8042_ports[0].serio!=NULL){
 		i8042_ports[0].serio->write = orig_kbd_write;
+		if(i8042_ports[0].serio->drv!=NULL){
+			i8042_ports[0].serio->drv->interrupt = orig_irq_handler;
+		}
 	}
+	/* deleting the /proc/lincoln/cmd file. */
 	delete_proc_files();
 	printk(KERN_INFO "goodbye\n");
 }
