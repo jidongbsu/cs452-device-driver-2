@@ -23,6 +23,8 @@ This chapter explains what roles I/O devices play in a computer system, and how 
 
 ### The Linux Input Subsystem
 
+![alt text](linux-input.jpg "The Linux Input Subsystem")
+
 ### The Intel 8042 Controller
 
 The provided virtual machine has an (emulated) Intel 8042 controller, which allows a PS/2 keyboard and a PS/2 mouse to connect to the machine.
@@ -33,10 +35,12 @@ The following picture, downloaded from the [osdev.org](https://wiki.osdev.org/%2
 
 ![alt text](8042.png "Intel 8042 Controller")
 
-As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addresses are 0x60 and 0x64. 0x60 is called the data port, a port that allows us to transfer data to and from the keyboard. 0x64 is called the status port, or status register, which has 8 bits. In particular:
+As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addresses are 0x60 and 0x64. You can interpret these two ports as two 8-bit registers. 0x60 represents the data register, a register which allows us to transfer data to and from the keyboard. 0x64 represents the status register, which also has 8 bits. A PS/2 keyboard typically has two buffers, input buffer and output buffer. And certain bits of the status register tells us the status of these two buffers, more specifically:
 
-1. bit 0 of this status register indicates the output buffer status (0=empty, 1=full), when this bit is 1, it means there is something for us to read from the data port.
-2. bit 1 of this status register indicates the input buffer status (0=empty, 1=full), when this bit is 0, it means the input buffer has space, and writing data to the data port is therefore allowed.
+1. bit 0 of this status register indicates the output buffer status (0=empty, 1=full), when this bit is 1, it means there is something for us to read from the data register.
+2. bit 1 of this status register indicates the input buffer status (0=empty, 1=full), when this bit is 0, it means the input buffer has space, and writing data to the data register is therefore allowed.
+
+As the chapter describes: "By reading and writing these registers, the operating system can control device behavior".
 
 # The Starter Code
 
@@ -112,6 +116,32 @@ this is the interrupt handler. Every time the keyboard raises an interrupt, this
 A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only needs to handle these two protocol scan codes, as well as all ordinary scan codes.
 
 **Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*.
+
+## Accessing the Status and Data Registers
+
+The book chapter describes:"on x86, the *in* and *out* instructions can be used to communicate with devices". Indeed, in this assignment, we will use the *in* instruction to inquire the status of our device - which in this assignment, means the keyboard, and we will use the *out* instruction to send our command to the device.
+
+Your *lincoln_kbd_write*() therefore should have the following logic:
+
+```c
+while(STATUS == BUSY)
+;
+Write data to DATA register
+```
+
+In this assignment, we do not intend to use the *in* and *out* assembly instructions directly, rather, we use C functions provided by the Linux kernel:
+
+1. *inb*(): this function encapsulates the *in* assembly instruction and it reads one byte from one specific (8-bit) register. For example, if we want to read one byte from a register whose address is at 0x64, then we call:
+
+```c
+inb(0x64)
+```
+
+2. *outb*(): this function encapsulates the *out* assembly instruction and it write one byte to one specific (8-bit) register. For example, if we want to write one byte *c* to a register whose address is at 0x60, then we call:
+
+```c
+outb(c, 0x60)
+```
 
 ## Testing
 
