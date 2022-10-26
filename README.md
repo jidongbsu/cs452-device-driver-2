@@ -123,7 +123,7 @@ A typical keyboard also defines other protocol scan codes. In this assignment, y
 
 As described above, our code is a part of a keyboard device driver. When a keyboard raises an interrupt, and if it is because of **situation** 1, i.e., user input, then our interrupt handler should pass this event to the keyboard event driver; when a keyboard raises an interrupt, but if it is because of **situation** 2, i.e., not an user input, our interrupt handler should react to it, but should not pass this event to the keyboard event driver. This is because the keyboard event driver's job is to collect events from the keyboard device driver and notify applications, when there is no user input, applications should not be notified by the keyboard event driver.
 
-**Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*. Note: the scancode of *l* is 0x26, the scancode of *s* is 0x1f.
+**Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*. Note: the scan code of *l* is 0x26, the scan code of *s* is 0x1f.
 
 ## Accessing the Status and Data Registers
 
@@ -153,19 +153,26 @@ outb(c, 0x60)
 
 ## Input Event APIs
 
-In the interrupt handler function, to report events to the input event drivers layer, you can call *input_event*() and *input_sync*() like this:
+In the interrupt handler function, to report events to the input event drivers layer, you can call *input_event*() and *input_sync*(). Their prototypes are:
+
+```c
+void input_event(struct input_dev *dev, unsigned int type, unsigned int code, int value);
+static inline void input_sync(struct input_dev *dev);
+```
+
+And you can call them like this:
 
 ```c
 struct atkbd *atkbd = serio_get_drvdata(serio);	// here serio is the first parameter of the interrupt handler function.
 struct input_dev *dev = atkbd->dev;
-input_event(dev, EV_KEY, keycode, value); // this function generates the event
+input_event(dev, EV_KEY, code, value); // this function is used to report new input event, the first parameter dev means the device that generated the event.
 input_sync(dev); // this function indicates that the input subsystem can collect previously generated events into an evdev packet and send it to user space via /dev/input/inputX
 ```
 
-Here *keycode* refers to the code that is corresponding to the key that is pressed or released, and *value* refers to the action of press or release. If the action is a key press, then value must be 1, if the action is a key release, then value must be 0. We can derive both the keycode and the value from the second parameter (i.e., *data*) of the interrupt handler function. The parameter *data*, as an unsigned char data type, has 8 bits, and
+Here *code* refers to the scan code that is corresponding to the key that is pressed or released, and *value* refers to the action of press or release. If the action is a key press, then value must be 1, if the action is a key release, then value must be 0. We can derive both the code and the value from the second parameter (i.e., *data*) of the interrupt handler function. The parameter *data*, as an unsigned char data type, has 8 bits, and
 
 1. bit 7 represents the action: 1==release, 0==press.
-2. bit 6 to bit 0 represents the keycode.
+2. bit 6 to bit 0 represents the code.
 
 More explanation of EV_KEY. The second parameter of *input_event*() tells the input subsystem what event type is generated. The Linux input subsystem defines several event types: the type EV_KEY is used to describe state changes of keyboards, buttons, or other key-like devices; the type EV_REL is used to describe relative axis value changes, e.g. moving the mouse 5 units to the left; the type EV_ABS is used to describe absolute axis value changes, e.g. describing the coordinates of a touch on a touchscreen; the type EV_LED is used to turn LEDs on devices on and off; the type EV_SND is used to output sound to devices. If you want to know more about these events, see the [documentation](https://www.kernel.org/doc/Documentation/input/event-codes.txt) comes with the Linux kernel source code.
 
