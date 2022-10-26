@@ -164,7 +164,7 @@ input_sync(dev); // this function indicates that the input subsystem can collect
 
 Here *keycode* refers to the code that is corresponding to the key that is pressed or released, and *value* refers to the action of press or release. If the action is a key press, then value must be 1, if the action is a key release, then value must be 0. We can derive both the keycode and the value from the second parameter (i.e., *data*) of the interrupt handler function. The parameter *data*, as an unsigned char data type, has 8 bits, and
 
-1. bit 7 represents the action: 0==release, 1==press
+1. bit 7 represents the action: 0==release, 1==press.
 2. bit 6 to bit 0 represents the keycode.
 
 More explanation of EV_KEY. The second parameter of *input_event*() tells the input subsystem what event type is generated. The Linux input subsystem defines several event types: the type EV_KEY is used to describe state changes of keyboards, buttons, or other key-like devices; the type EV_REL is used to describe relative axis value changes, e.g. moving the mouse 5 units to the left; the type EV_ABS is used to describe absolute axis value changes, e.g. describing the coordinates of a touch on a touchscreen; the type EV_LED is used to turn LEDs on devices on and off; the type EV_SND is used to output sound to devices. If you want to know more about these events, see the [documentation](https://www.kernel.org/doc/Documentation/input/event-codes.txt) comes with the Linux kernel source code.
