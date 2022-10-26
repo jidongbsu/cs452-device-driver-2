@@ -123,7 +123,7 @@ A typical keyboard also defines other protocol scan codes. In this assignment, y
 
 As described above, our code is a part of a keyboard device driver. When a keyboard raises an interrupt, and if it is because of **situation** 1, i.e., user input, then our interrupt handler should pass this event to the keyboard event driver; when a keyboard raises an interrupt, but if it is because of **situation** 2, i.e., not an user input, our interrupt handler should react to it, but should not pass this event to the keyboard event driver. This is because the keyboard event driver's job is to collect events from the keyboard device driver and notify applications, when there is no user input, applications should not be notified by the keyboard event driver.
 
-**Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*.
+**Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*. Note: the scancode of *l* is 0x26, the scancode of *s* is 0x1f.
 
 ## Accessing the Status and Data Registers
 
