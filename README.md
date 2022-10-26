@@ -5,7 +5,8 @@ In this assignment, we will write a Linux kernel module called lincoln. This mod
 ## Learning Objectives
 
 - Learning how to interact with an I/O device.
-- Gaining a better understanding of interrupts.
+- Gaining a better understanding of interrupts, and interrupt handlers.
+- Understanding the difference between polling and interrupts.
 
 ## Important Notes
 
