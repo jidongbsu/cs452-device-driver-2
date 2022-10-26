@@ -29,7 +29,7 @@ According to chapter 7 (Input Drivers) of the book "Essential Linux Device Drive
 
 The chapter says the above figure "illustrates the operation of the input subsystem. The subsystem contains two classes of drivers that work in tandem: event drivers and device drivers. Event drivers are responsible for interfacing with applications, whereas device drivers are responsible for low-level communication with input devices. The mouse event generator, mousedev, is an example of the former, and the PS/2 mouse driver is an example of the latter. Both event drivers and device drivers can avail the services of an efficient, bug-free, reusable core, which lies at the heart of the input subsystem."
 
-You are recommended to read the chapter, but to briefly explain this figure and relate it to this assignment: the part we are working on is a keyboard device driver, which belongs to the **input device drivers**, and we will interact with the keyboard event driver, which is already existing in the Linux kernel and belongs to the **input event drivers**. An input device driver does not directly interact with applications, rather it interacts with an input event driver, and that input event driver interacts with applications. Therefore, when a key press/release event occurs, we, as the keyboard device driver, capture this event and report this event to the keyboard event driver. See the [Input Event APIs](#input_event_apis) section for the APIs we can use to report events.
+You are recommended to read the chapter, but to briefly explain this figure and relate it to this assignment: the part we are working on is a keyboard device driver, which belongs to the **input device drivers** class, and we will interact with the keyboard event driver, which is already existing in the Linux kernel and belongs to the **input event drivers** class. An input device driver does not directly interact with applications, rather it interacts with an input event driver, and that input event driver interacts with applications. Therefore, when a key press/release event occurs, we, as the keyboard device driver, capture this event and report this event to the keyboard event driver. See the [Input Event APIs](#input_event_apis) section for the APIs we can use to report events.
 
 ### The Intel 8042 Controller
 
@@ -166,6 +166,8 @@ Here *keycode* refers to the code that is corresponding to the key that is press
 
 1. bit 7 represents the action: 0==release, 1==press
 2. bit 6 to bit 0 represents the keycode.
+
+More explanation of EV_KEY. The second parameter of *input_event*() tells the input subsystem what event type is generated. The Linux input subsystem defines several event types: the type EV_KEY is used to describe state changes of keyboards, buttons, or other key-like devices; the type EV_REL is used to describe relative axis value changes, e.g. moving the mouse 5 units to the left; the type EV_ABS is used to describe absolute axis value changes, e.g. describing the coordinates of a touch on a touchscreen; the type EV_LED is used to turn LEDs on devices on and off; the type EV_SND is used to output sound to devices. If you want to know more about these events, see the [documentation](https://www.kernel.org/doc/Documentation/input/event-codes.txt) comes with the Linux kernel source code.
 
 ## Testing
 
