@@ -78,13 +78,15 @@ You are required to implement the following functions.
 static int lincoln_kbd_write(struct serio *port, unsigned char c);
 ```
 
-this function sends a single byte to the keyboard. A PS/2 keyboard supports 17 host-to-keyboard commands. For example, command *0xf5* means disabling the keyboard, and command *0xf4* means enabling the keyboard, and command 0xff means resetting the keyboard. In this assignment, we want to allow the user to disable, enable and reset the keyboard. More specifically, when the user runs this:
+this function writes a single byte to the keyboard. It should return 0 if the writing is successful, and return -1 if the writing is not successful. The first parameter *port* will not be used in this assignment.
+
+A PS/2 keyboard supports 17 host-to-keyboard commands. For example, command *0xf5* means disabling the keyboard, and command *0xf4* means enabling the keyboard, and command 0xff means resetting the keyboard. In this assignment, we want to allow the user to disable, enable and reset the keyboard. More specifically, when the user runs this:
 
 ```console
 # sudo echo 'D' > /proc/lincoln/cmd
 ```
 
-we need to disable the keyboard. In other words, we want to send the *0xf5* command to the keyboard - write this 0xf5 to the data port. The expected effect of this command is, the keyboard will become unresponsive.
+we need to disable the keyboard. In other words, we want to send the *0xf5* command to the keyboard - write this 0xf5 to the data register. The expected effect of this command is, the keyboard will become unresponsive.
 
 And then when the user runs this:
 
@@ -92,7 +94,7 @@ And then when the user runs this:
 # sudo echo 'E' > /proc/lincoln/cmd
 ```
 
-we need to enable the keyboard. In other words, we want to send the *0xf4* command to the keyboard - write this 0xf4 to the data port. The expected effect of this command is, the keyboard will become responsive again.
+we need to enable the keyboard. In other words, we want to send the *0xf4* command to the keyboard - write this 0xf4 to the data register. The expected effect of this command is, the keyboard will become responsive again.
 
 **Question**: when the keyboard is not responsive at all, how can the user even enter the second command - which enables the keyboard?
 
@@ -102,7 +104,7 @@ And then when the user runs this:
 # sudo echo 'R' > /proc/lincoln/cmd
 ```
 
-we want to keyboard to reset. In other words, we want to send the *0xff* command to the keyboard - write this 0xf4 to the data port. The expected effect of this command is, the keyboard will perform a BAT test and when the BAT test is complete, the keyboard will send either 0xAA (BAT successful) or 0xFC (Error) to the host. Keep reading this README and you will soon find out what BAT is.
+we want to keyboard to reset. In other words, we want to send the *0xff* command to the keyboard - write this 0xf4 to the data register. The expected effect of this command is, the keyboard will perform a BAT test and when the BAT test is complete, the keyboard will send either 0xAA (BAT successful) or 0xFC (Error) to the host. Keep reading this README and you will soon find out what BAT is.
 
 **Note**: the starter code is implemented in such a way that when the user run the above *sudo echo* commands, your *lincoln_kbd_write*() will get called, and the command is passed as the second parameter of your function, i.e., *unsigned char c*.
 
@@ -130,14 +132,6 @@ As described above, our code is a part of a keyboard device driver. When a keybo
 
 The textbook chapter describes:"on x86, the *in* and *out* instructions can be used to communicate with devices". Indeed, in this assignment, we will use the *in* instruction to inquire the status of our device - which in this assignment, means the keyboard, and we will use the *out* instruction to send our command to the device.
 
-Your *lincoln_kbd_write*() therefore should have the following logic:
-
-```c
-while(STATUS == BUSY)
-;
-Write data to DATA register
-```
-
 In this assignment, we do not intend to use the *in* and *out* assembly instructions directly, rather, we use C functions provided by the Linux kernel:
 
 1. *inb*(): this function encapsulates the *in* assembly instruction and it reads one byte from one specific (8-bit) register. For example, if we want to read one byte from a register whose address is at 0x64, then we call:
@@ -150,6 +144,26 @@ inb(0x64)
 
 ```c
 outb(c, 0x60)
+```
+
+Similar to what the textbook chapter presents, your *lincoln_kbd_write*() should have the following polling logic:
+
+```c
+while(STATUS == BUSY)
+;
+Write data to DATA register
+```
+
+However, a while loop like this is a waste of CPU cycles and therefore is not recommended. A better way is, poll the device every 50 micro-seconds. In other words, inquire the status of the device, if it's busy - busy means that the input buffer is not available, then sleep for 50 micro-seconds, and then try again. You can call *udelay*() like this to sleep for 50 micro-seconds.
+
+```c
+udelay(50);
+```
+
+If after polling 10,000 times, the device is still busy, your *lincoln_kbd_write*() should print an error message and stop the writing attempt, in other words, your *lincoln_kbd_write*() returns -1, indicating the writing is not successful. To serve this purpose, the starter code therefore has the following macro:
+
+```c
+#define I8042_CTL_TIMEOUT       10000
 ```
 
 ## Input Event APIs
