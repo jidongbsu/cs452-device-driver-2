@@ -58,7 +58,7 @@ The starter code looks like this:
 8042.png  lincoln.c  linux-input.jpg  Makefile  README.md  README.template
 ```
 
-You will be completing the lincoln.c file. You should not modify the lincoln.h file.
+You will be completing the lincoln.c file.
 
 The starter code already provides you with the code for a kernel module called lincoln. To install the module, run *make* and then *sudo insmod lincoln.ko*; to remove it, run *sudo rmmod lincoln*. Yes, in rmmod, whether or not you specify ko does not matter; but in insmod, you must have that ko.
 
@@ -112,21 +112,41 @@ we want to keyboard to reset. In other words, we want to send the *0xff* command
 static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, unsigned int flags);
 ```
 
-this is the interrupt handler. Every time the keyboard raises an interrupt, this function will get called. There are two **situations** when a keyboard raises an interrupts:
+this is the interrupt handler. Every time the keyboard raises an interrupt, this function will get called. There are two situations when a keyboard raises an interrupts:
 
-**Situation** 1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just pressed or released) to the upper layer of the system, and eventually the application will receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
+1. User input. This is the most obvious reason. As the computer user, you type something from the keyboard, the keyboard needs to send a code (known as a scan code) corresponding to the key (you just pressed or released) to the upper layer of the system, and eventually the application will receive that key. Here, the second parameter of the interrupt handler, which is *data*, stores the scan code.
 
-**Situation** 2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code. Some examples of the protocol scan code include:
+2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code. Some examples of the protocol scan code include:
 
   - 0xaa. This is called the BAT successful code. When you boot your computer, the keyboard performs a diagnostic self-test referred to as BAT (Basic Assurance Test) and configure the keyboard to its default values. When entering BAT, the keyboard enables its three LED indicators, and turns them off when BAT has completed. At this time, a BAT completion code of either 0xAA (BAT successful) or 0xFC (Error) is sent to the host. Besides power-on, a software reset would also trigger the keyboard to perform BAT.
 
   - 0xfa. This is called the acknowledge code, or "ack" code. When the host sends a command to the keyboard, the keyboard may respond with an **ack** code, indicating the command is received by the keyboard.
 
-A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler only needs to handle these two protocol scan codes, as well as all ordinary scan codes.
+A typical keyboard also defines other protocol scan codes. In this assignment, your interrupt handler needs to handle protocol scan codes, as well as ordinary scan codes.
 
-As described above, our code is a part of a keyboard device driver. When a keyboard raises an interrupt, and if it is because of **situation** 1, i.e., user input, then our interrupt handler should pass this event to the keyboard event driver; when a keyboard raises an interrupt, but if it is because of **situation** 2, i.e., not an user input, our interrupt handler should react to it, but should not pass this event to the keyboard event driver. This is because the keyboard event driver's job is to collect events from the keyboard device driver and notify applications, when there is no user input, applications should not be notified by the keyboard event driver.
+In total we have the following protocol scan codes defined:
+
+```c
+#define ATKBD_RET_ACK           0xfa	/* Acknowledge from kbd */
+#define ATKBD_RET_NAK           0xfe	/* Keyboard fails to ack, please resend */
+#define ATKBD_RET_BAT           0xaa	/* BAT (Basic Assurance Test) OK */
+#define ATKBD_RET_EMUL0         0xe0	/* The codes e0 and e1 introduce scancode sequences, and are not usually used as isolated scancodes themselves */
+#define ATKBD_RET_EMUL1         0xe1	/* */
+#define ATKBD_RET_RELEASE       0xf0	/* */
+#define ATKBD_RET_HANJA         0xf1	/* Some keyboards, as reply to command */
+#define ATKBD_RET_HANGEUL       0xf2	/* */
+#define ATKBD_RET_ERR           0xff	/* Keyboard error */
+```
 
 **Special Requirement**: Your interrupt handler must achieve this: when the user types every key other than *l* or *s*, the user should observe normal behaviors; but when the user types *l*, it should be interpreted as *s*, and displayed as *s*; when the user types *s*, it should be interpreted as *l*, and displayed as *l*. Note: the scan code of *l* is 0x26, the scan code of *s* is 0x1f.
+
+## Reaction to Protocol Scan Codes and Ordinary Scan Codes
+
+When the keyboard produces an ordinary scan code, the interrupt handler should pass it to the keyboard event driver, which will then pass it to the corresponding application; when the keyboard produces a protocol scan code, the interrupt handler should react as following:
+
+1. if the produced protocol scan code is ATKBD_RET_BAT, print a message to the kernel log saying:"keyboard reset okay."
+2. if the produced protocol scan code is ATKBD_RET_ACK, print a message to the kernel log saying:"we get an ACK from the keyboard."
+3. for all the other protocol scan codes, your interrupt handler can just return IRQ_HANDLED.
 
 ## Accessing the Status and Data Registers
 
