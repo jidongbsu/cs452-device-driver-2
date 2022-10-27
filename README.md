@@ -18,7 +18,7 @@ In this README, you will see the term **host**. It is used to refer to the compu
 
 Operating Systems: Three Easy Pieces: [I/O Devices](https://pages.cs.wisc.edu/~remzi/OSTEP/file-devices.pdf).
 
-This chapter explains what roles I/O devices play in a computer system, and how device drivers work in general. In particular, it describes how an operating system interacts with I/O devices, and how interrupts work and why interrupts can lower the CPU's overhead. The chapter also explains what an interrupt handler is - in this assignment, a part of your job is to implement an interrupt handler for a PS/2 keyboard, which is the default keyboard used in the provided virtual machine.
+This textbook chapter explains what roles I/O devices play in a computer system, and how device drivers work in general. In particular, it describes how an operating system interacts with I/O devices, and how interrupts work and why interrupts can lower the CPU's overhead. The chapter also explains what an interrupt handler is - in this assignment, a part of your job is to implement an interrupt handler for a PS/2 keyboard, which is the default keyboard used in the provided virtual machine.
 
 ## Background
 
@@ -47,7 +47,7 @@ As we can see from the picture, the PS/2 keyboard has two I/O ports, whose addre
 1. bit 0 of this status register indicates the output buffer status (0=empty, 1=full), when this bit is 1, it means there is something for us to read from the data register.
 2. bit 1 of this status register indicates the input buffer status (0=empty, 1=full), when this bit is 0, it means the input buffer has space, and writing data to the data register is therefore allowed.
 
-As the chapter describes: "By reading and writing these registers, the operating system can control device behavior".
+As the textbook chapter describes: "By reading and writing these registers, the operating system can control device behavior".
 
 # The Starter Code
 
@@ -128,7 +128,7 @@ As described above, our code is a part of a keyboard device driver. When a keybo
 
 ## Accessing the Status and Data Registers
 
-The book chapter describes:"on x86, the *in* and *out* instructions can be used to communicate with devices". Indeed, in this assignment, we will use the *in* instruction to inquire the status of our device - which in this assignment, means the keyboard, and we will use the *out* instruction to send our command to the device.
+The textbook chapter describes:"on x86, the *in* and *out* instructions can be used to communicate with devices". Indeed, in this assignment, we will use the *in* instruction to inquire the status of our device - which in this assignment, means the keyboard, and we will use the *out* instruction to send our command to the device.
 
 Your *lincoln_kbd_write*() therefore should have the following logic:
 
