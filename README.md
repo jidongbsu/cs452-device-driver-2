@@ -199,7 +199,7 @@ while(STATUS == BUSY)
 Write data to DATA register
 ```
 
-However, just like textbook chapter says, a while loop like this "seems inefficient; specifically, it wastes a great deal of CPU time just waiting for the (potentially slow) device to complete its activity". Therefore, this is not recommended. A better way is, poll the device every 50 micro-seconds. In other words, inquire the status of the device, if it's busy - busy means that the input buffer is not available, then sleep for 50 micro-seconds, and then try again. You can call *udelay*() like this to sleep for 50 micro-seconds.
+However, just like the textbook chapter says, a while loop like this "seems inefficient; specifically, it wastes a great deal of CPU time just waiting for the (potentially slow) device to complete its activity". Therefore, this is not recommended. A better way is, poll the device every 50 micro-seconds. In other words, inquire the status of the device, if it's busy - busy means that the input buffer is not available, then sleep for 50 micro-seconds, and then try again. You can call *udelay*() like this to sleep for 50 micro-seconds.
 
 ```c
 udelay(50);
