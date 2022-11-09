@@ -322,4 +322,12 @@ Now it needs to be like this:
 
 Here we assume the VM is running on onyxnode64. The only difference between these two commands is replacing '-curses' with '-vnc onyxnode64.boisestate.edu:0'. The curses option means displaying the VM's video output in a text mode; whereas the vnc option means starting a VNC server and redirect the VM's display to this VNC server, which by default listens on port 5900.
 
-Once your VM is booted with this VNC server running, you can use a VNC client, also known as a VNC viewer, to connect to your VM, just connect to onyxnode64.boisestate.edu:5900. Once again, here we assume the VM is running on onyxnode64.
+Once your VM is booted with this VNC server running, you can use a VNC client, also known as a VNC viewer, to connect to your VM, just connect to onyxnode64.boisestate.edu:5900. Once again, here we assume the VM is running on onyxnode64. The following are two examples of using a VNC client to access the VM.
+
+1. using "Remote Desktop Viewer".
+
+![alt text](vnc-rdv.png "Remote Desktop Viewer")
+
+2. using "TigerVNC Viewer"
+
+![alt text](vnc-tiger.png "TigerVNC Viewer")
