@@ -104,7 +104,7 @@ And then when the user runs this:
 # sudo echo 'R' > /proc/lincoln/cmd
 ```
 
-we want to keyboard to reset. In other words, we want to send the *0xff* command to the keyboard - write this 0xf4 to the data register. The expected effect of this command is, the keyboard will perform a BAT test and when the BAT test is complete, the keyboard will send either 0xAA (BAT successful) or 0xFC (Error) to the host. Keep reading this README and you will soon find out what BAT is.
+we want to keyboard to reset. In other words, we want to send the *0xff* command to the keyboard - write this 0xf4 to the data register. The expected effect of this command is, the keyboard will first respond with "ack" (0xfa), and then it will perform a BAT test. When the BAT test is complete, the keyboard will send either 0xAA (BAT successful) or 0xFC (Error) to the host. Keep reading this README and you will soon find out what BAT is.
 
 **Note**: the starter code is implemented in such a way that when the user run the above *sudo echo* commands, your *lincoln_kbd_write*() will get called, and the command is passed as the second parameter of your function, i.e., *unsigned char c*, which is one byte. Your *lincoln_kbd_write*() achieves its goal of writing the command to the keyboard, via writing this one byte command into the keyboard's data register, which, as introduced above, is located at address 0x60.
 
@@ -118,7 +118,7 @@ this is the interrupt handler. Every time the keyboard raises an interrupt, this
 
 2. Sometimes the user does not input anything, but the keyboard may still want to tell the CPU that something is happening. In this case, the keyboard also produces a scan code, which is known as a protocol scan code - in contrast, a scan code produced in the above situation is called an ordinary scan code. Still, the second parameter of the interrupt handler, which is *data*, stores the scan code. Some examples of the protocol scan code include:
 
-  - 0xaa. This is called the BAT successful code. When you boot your computer, the keyboard performs a diagnostic self-test referred to as BAT (Basic Assurance Test) and configure the keyboard to its default values. When entering BAT, the keyboard enables its three LED indicators, and turns them off when BAT has completed. At this time, a BAT completion code of either 0xAA (BAT successful) or 0xFC (Error) is sent to the host. Besides power-on, a software reset would also trigger the keyboard to perform BAT.
+  - 0xaa. This is called the BAT successful code. When you boot your computer, the keyboard performs a diagnostic self-test referred to as BAT (Basic Assurance Test) and configure the keyboard to its default values. When entering BAT, the keyboard enables its three LED indicators, and turns them off when BAT has completed. At this time, a BAT completion code of either 0xAA (BAT successful) or 0xFC (Error) is sent to the host. Besides power-on, a software reset would also trigger the keyboard to perform the BAT test.
 
   - 0xfa. This is called the acknowledge code, or "ack" code. When the host sends a command to the keyboard, the keyboard may respond with an **ack** code, indicating the command is received by the keyboard.
 
@@ -144,9 +144,9 @@ In total we have the following protocol scan codes defined:
 
 When the keyboard produces a protocol scan code, the interrupt handler should react as following:
 
-1. if the produced protocol scan code is ATKBD_RET_BAT, print a message to the kernel log saying:"keyboard reset okay."
-2. if the produced protocol scan code is ATKBD_RET_ACK, print a message to the kernel log saying:"we get an ACK from the keyboard."
-3. for all the other protocol scan codes, your interrupt handler can just return IRQ_HANDLED.
+1. if the produced protocol scan code is ATKBD_RET_BAT, print a message to the kernel log saying:"keyboard reset okay.", and return **IRQ_HANDLED**.
+2. if the produced protocol scan code is ATKBD_RET_ACK, print a message to the kernel log saying:"we get an ACK from the keyboard.", and return **IRQ_HANDLED**.
+3. for all the other protocol scan codes, your interrupt handler can just return **IRQ_HANDLED**.
 
 ## Reaction to Ordinary Scan Codes
 
@@ -172,6 +172,8 @@ Here *code* refers to the scan code that is corresponding to the key that is pre
 2. bit 6 to bit 0 represents the code.
 
 More explanation of EV_KEY. The second parameter of *input_event*() tells the input subsystem what event type is generated. The Linux input subsystem defines several event types: the type EV_KEY is used to describe state changes of keyboards, buttons, or other key-like devices; the type EV_REL is used to describe relative axis value changes, e.g. moving the mouse 5 units to the left; the type EV_ABS is used to describe absolute axis value changes, e.g. describing the coordinates of a touch on a touchscreen; the type EV_LED is used to turn LEDs on devices on and off; the type EV_SND is used to output sound to devices. If you want to know more about these events, see the [documentation](https://www.kernel.org/doc/Documentation/input/event-codes.txt) comes with the Linux kernel source code.
+
+Once the ordinary scan code is passed to the keyboard event driver, your interrupt handler function can just return **IRQ_HANDLED**.
 
 ## Accessing the Status and Data Registers
 
@@ -269,13 +271,21 @@ When the user runs:
 # sudo echo 'R' > /proc/lincoln/cmd
 ```
 
-We must see this message printed in the kernel log:
+After the above three *echo* commands, we must see this message printed in the kernel log at least once:
 
 ```console
 we get an ACK from the keyboard.
 ```
+On some computers it could be three times, at least on my computer, each of the above *echo* commands would trigger the keyboard to send an "ack" message back; but this may not be the standard behavior, so if you only get this message once, that is acceptable too. According to [The PS/2 Mouse/Keyboard Protocol](https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf), written by Adam Chapweske, when the host sends a reset command to the keyboard, the keyboard responds with an "ack", and then performs the BAT test. However, the same documentation does not say the keyboard would respond with an "ack" when receiving the disable or enable command.
 
-And this message must be printed by your interrupt handler function.
+
+In addition, because of the BAT test, we should also observe this message to be printed in the kernel log once and only once:
+
+```console
+keyboard reset okay.
+```
+
+And these messages must be printed by your interrupt handler function.
 
 ## Submission
 
