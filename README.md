@@ -303,7 +303,7 @@ Grade: /100
   - *ls* shows (and runs) as *sl*, and *sl* shows (and runs) as *ls*. /20
   - Commands *pwd*, *who*, and *whoami* work as expected. /20
   - Keyboard disable and then enable works. /20
-  - Keyboard reset works and we get that ack message in the kernel log. /10
+  - Keyboard reset works and we get that ack message, as well as the "reset okay" message, in the kernel log. /10
   - Module can be installed and removed without crashing the system: /10
     - You won't get these points if your module doesn't implement any of the above functional requirements.
 
