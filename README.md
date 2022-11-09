@@ -305,3 +305,21 @@ Grade: /100
 - [10 pts] Documentation:
   - README.md file (rename this current README file to README.orig and rename the README.template to README.md.)
   - You are required to fill in every section of the README template, missing 1 section will result in a 2-point deduction.
+
+## Special Notes
+
+If you want to use the QEMU/KVM virtual machine hosted on onyx nodes to test your keyboard driver, you need to enable the VNC service. VNC stands for Virtual Network Computing, which is a protocol that allows us to remotely access the graphic user interface of another computer. More specifically, if previously this was how you boot the VM:
+
+```console
+./qemu-3.0.0/x86_64-softmmu/qemu-system-x86_64 -machine accel=kvm -hda cs452.img -boot c -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5022-:22 -name cs452 -m 2G -serial stdio -curses -s
+```
+
+Now it needs to be like this:
+
+```console
+./qemu-3.0.0/x86_64-softmmu/qemu-system-x86_64 -machine accel=kvm -hda cs452.img -boot c -device e1000,netdev=net0 -netdev user,id=net0,hostfwd=tcp::5022-:22 -name cs452 -m 2G -serial stdio -s -vnc onyxnode64.boisestate.edu:0
+```
+
+Here we assume the VM is running on onyxnode64. The only difference between these two commands is replacing '-curses' with '-vnc onyxnode64.boisestate.edu:0'. The curses option means displaying the VM's video output in a text mode; whereas the vnc option means starting a VNC server and redirect the VM's display to this VNC server, which by default listens on port 5900.
+
+Once your VM is booted with this VNC server running, you can use a VNC client, also known as a VNC viewer, to connect to your VM, just connect to onyxnode64.boisestate.edu:5900. Once again, here we assume the VM is running on onyxnode64.
