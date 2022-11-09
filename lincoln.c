@@ -117,25 +117,28 @@ static struct proc_dir_entry *pdir;
 
 /* we do not support EV_MSC events, thus we do not generate EV_MSC MSC_SCAN or EV_MSC MSC_RAW events.
  * this driver only supports number keys and letter keys; special keys require some special treatment, 
- * which is beyond the scope of this program. */
+ * which is beyond the scope of this program. 
+ * the parameter flags won't be used in this program. */
 static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, unsigned int flags)
 {
 	return IRQ_HANDLED;
 }
 
+/* in theory we should use this lock when reading/writing the 8042 registers,
+ * but in this assignment, it looks like even if we don't use this lock,
+ * we should still be able to pass all of our tests. */
 struct spinlock *i8042_lock;
 
 /*
  * lincoln_kbd_write(): sends a byte out through the keyboard interface.
  * return 0 if successful; return -1 if not successful.
  * */
-
 static int lincoln_kbd_write(struct serio *port, unsigned char c)
 {
 	return 0;
 }
 
-/* Occurs when a user runs sudo echo 'cmd' > /proc/lincoln/cmd
+/* gets called when a user runs sudo echo 'cmd' > /proc/lincoln/cmd
  * supported commands:
  * "D": disable;
  * "E": enable;
@@ -175,13 +178,13 @@ struct file_operations proc_fops = {
    write: write_proc,
 };
 
-/* Helper function to create the directory entries for /proc */
+/* helper function to create the directory entries for /proc */
 void create_proc_files(void) {
    pdir = proc_mkdir(DIR_NAME, NULL);
    proc_create(FILE_NAME, GLOBAL_RW_PERM, pdir, &proc_fops);
 }
 
-/* Helper function to delete the directory entries for /proc */
+/* helper function to delete the directory entries for /proc */
 void delete_proc_files(void) {
    remove_proc_entry(FILE_NAME, pdir);
    remove_proc_entry(DIR_NAME, NULL);

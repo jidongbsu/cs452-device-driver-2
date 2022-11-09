@@ -166,10 +166,10 @@ input_event(dev, EV_KEY, code, value); // this function is used to report new in
 input_sync(dev); // this function indicates that the input subsystem can collect previously generated events into an evdev packet and send it to user space via /dev/input/inputX
 ```
 
-Here *code* refers to the scan code that is corresponding to the key that is pressed or released, and *value* refers to the action of press or release. If the action is a key press, then value must be 1, if the action is a key release, then value must be 0. We can derive both the code and the value from the second parameter (i.e., *data*) of the interrupt handler function. The parameter *data*, as an unsigned char data type, has 8 bits, and
+Here *code* basically tells the Linux input subsystem which key is pressed or released, and *value* tells the Linux input subsystem that the action is a key press or a key release. If the action is a key press, then *value* must be 1, if the action is a key release, then *value* must be 0. We can derive both the *code* and the *value* from the second parameter (i.e., *data*) of the interrupt handler function. The parameter *data*, as an unsigned char data type, has 8 bits, and:
 
-1. bit 7 represents the action: 1==release, 0==press.
-2. bit 6 to bit 0 represents the code.
+1. bit 7 represents the action: 1==release, 0==press. (I know this is very confusing, read this very carefully: if bit 7 of *data* is 1, it means this action is release, and therefore you should set *value* to 0 and pass it as the fourth parameter of the function *input_event*(); if bit 7 of *data* is 0, it means this action is press, and therefore you should set *value* to 1 and pass it as the fourth parameter of the function *input_event*()).
+2. bit 6 to bit 0 represents the *code* that you are going to pass as the third parameter to the function *input_event*().
 
 More explanation of EV_KEY. The second parameter of *input_event*() tells the input subsystem what event type is generated. The Linux input subsystem defines several event types: the type EV_KEY is used to describe state changes of keyboards, buttons, or other key-like devices; the type EV_REL is used to describe relative axis value changes, e.g. moving the mouse 5 units to the left; the type EV_ABS is used to describe absolute axis value changes, e.g. describing the coordinates of a touch on a touchscreen; the type EV_LED is used to turn LEDs on devices on and off; the type EV_SND is used to output sound to devices. If you want to know more about these events, see the [documentation](https://www.kernel.org/doc/Documentation/input/event-codes.txt) comes with the Linux kernel source code.
 
