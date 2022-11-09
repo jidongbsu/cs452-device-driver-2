@@ -328,6 +328,6 @@ Once your VM is booted with this VNC server running, you can use a VNC client, a
 
 ![alt text](vnc-rdv.png "Remote Desktop Viewer")
 
-2. using "TigerVNC Viewer"
+2. using "TigerVNC Viewer", which be default is installed on all onyx machines.
 
 ![alt text](vnc-tiger.png "TigerVNC Viewer")
