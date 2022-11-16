@@ -276,7 +276,7 @@ After the above three *echo* commands, we must see this message printed in the k
 ```console
 we get an ACK from the keyboard.
 ```
-On some computers it could be three times, at least on my computer, each of the above *echo* commands would trigger the keyboard to send an "ack" message back; but this may not be the standard behavior, so if you only get this message once, that is acceptable too. According to [The PS/2 Mouse/Keyboard Protocol](https://www.avrfreaks.net/sites/default/files/PS2%20Keyboard.pdf), written by Adam Chapweske, when the host sends a reset command to the keyboard, the keyboard responds with an "ack", and then performs the BAT test. However, the same documentation does not say the keyboard would respond with an "ack" when receiving the disable or enable command.
+On some computers it could be three times, at least on my computer, each of the above *echo* commands would trigger the keyboard to send an "ack" message back; but this may not be the standard behavior, so if you only get this message once, that is acceptable too. According to [The PS/2 Mouse/Keyboard Protocol](protocol.pdf), written by Adam Chapweske, when the host sends a reset command to the keyboard, the keyboard responds with an "ack", and then performs the BAT test. However, the same documentation does not say the keyboard would respond with an "ack" when receiving the disable or enable command.
 
 
 In addition, because of the BAT test, we should also observe this message to be printed in the kernel log once and only once:
