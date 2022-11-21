@@ -106,7 +106,7 @@ And then when the user runs this:
 
 we want to keyboard to reset. In other words, we want to send the *0xff* command to the keyboard - write this 0xf4 to the data register. The expected effect of this command is, the keyboard will first respond with "ack" (0xfa), and then it will perform a BAT test. When the BAT test is complete, the keyboard will send either 0xAA (BAT successful) or 0xFC (Error) to the host. Keep reading this README and you will soon find out what BAT is.
 
-**Note**: the starter code is implemented in such a way that when the user run the above *sudo echo* commands, your *lincoln_kbd_write*() will get called, and the command is passed as the second parameter of your function, i.e., *unsigned char c*, which is one byte. Your *lincoln_kbd_write*() achieves its goal of writing the command to the keyboard, via writing this one byte command into the keyboard's data register, which, as introduced above, is located at address 0x60.
+**Note**: the starter code is implemented in such a way that when the user runs the above *sudo echo* commands, your *lincoln_kbd_write*() will get called, and the actual host-to-keyboard command is passed as the second parameter of your function, i.e., *unsigned char c*, which is one byte. In other words, *c* will be 0xf5, 0xf4, or 0xff, rather than 'D', 'E' or 'R'. Your *lincoln_kbd_write*() achieves its goal of writing the host-to-keyboard command to the keyboard, via writing this one byte command into the keyboard's data register, which, as introduced above, is located at address 0x60.
 
 ```c
 static irqreturn_t lincoln_irq_handler(struct serio *serio, unsigned char data, unsigned int flags);
